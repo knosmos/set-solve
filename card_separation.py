@@ -7,7 +7,7 @@ CARD_IMG_WIDTH = 400
 CARD_IMG_HEIGHT = int(CARD_IMG_WIDTH/CARD_RATIO)
 
 # Read image
-img = cv2.imread("set4.jpg")
+img = cv2.imread("test/set2.jpg")
 
 '''
 img_gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
