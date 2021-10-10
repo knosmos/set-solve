@@ -9,16 +9,6 @@ CARD_IMG_HEIGHT = int(CARD_IMG_WIDTH/CARD_RATIO)
 # Read image
 img = cv2.imread("test/set2.jpg")
 
-'''
-img_gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
-img_blur = cv2.GaussianBlur(img_gray, (5,5), cv2.BORDER_DEFAULT)
-cv2.imshow("image_gray", img_gray)
-
-# Binary Threshold
-ret, img_thresh = cv2.threshold(img_blur, 150, 255, cv2.THRESH_BINARY)
-cv2.imshow("image_thresh", img_thresh)
-'''
-
 # Extract white cards
 WHITE_MIN = np.array([0, 0, 150],np.uint8)
 WHITE_MAX = np.array([180, 100, 255],np.uint8)
