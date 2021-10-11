@@ -1,11 +1,19 @@
 import cv2
 import numpy as np
 
+# Shape Separation Constants
 WHITE_MIN = np.array([0, 0, 170],np.uint8)
 WHITE_MAX = np.array([180, 60, 255],np.uint8)
 AREA_THRESH = 7000
 
-img = cv2.imread("cards/card10.png")
+# Reference Features
+ELLIPSE_FEATURES = np.array([0.03155387787592858, -0.0037758243610366725, 0.205290481844915, -1.4503161754586032e-05, -2.9263679436010096e-05, 0.000142860777666745, 0.0001081177739358252])
+DIAMOND_FEATURES = np.array([0.032902776926284946, -0.004827861419942702, 0.21169459653794936, -3.226527335538325e-05, 2.965936208089489e-06, 0.0001491130652801827, -6.661682099746633e-05])
+SQUIGGLE_FEATURES = np.array([0.030580390546484034, 0.019392749469723414, 0.2646959376958161, 6.466367502274759e-05, 0.0005285519078694084, -0.0022415312093423457, -0.007887757425908665])
+
+# Shape Separation
+
+img = cv2.imread("cards/card5.png")
 img = cv2.GaussianBlur(img, (3,3), cv2.BORDER_DEFAULT)
 
 img_gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
@@ -18,27 +26,59 @@ contours, hierarchy = cv2.findContours(img_thresh, cv2.RETR_TREE, cv2.CHAIN_APPR
 
 img_copy1 = img.copy()
 cv2.drawContours(img_copy1, contours, -1, (0, 255, 0), 2, cv2.LINE_AA)
-cv2.imshow("contours", img_copy1)
+#cv2.imshow("contours", img_copy1)
 
-# Remove contours that are inside others (contours-in-contours are caused by Canny)
-shapes = []
+# Remove contours that are inside others
+contours_filtered = []
 for i, contour in enumerate(contours):
-    print(f"hierarchy: {hierarchy[0,i,3]}")
+    #print(f"hierarchy: {hierarchy[0,i,3]}")
     if hierarchy[0,i,3] == -1:
-        print(cv2.contourArea(contour))
-        shapes.append(contour)
+        #print(cv2.contourArea(contour))
+        contours_filtered.append(contour)
+contours = contours_filtered
 
 # Remove shapes that are too small
-shapes_area_filtered = []
-for hull in hulls:
-    if cv2.contourArea(hull) >= AREA_THRESH:
-        print(cv2.contourArea(hull))
-        shapes_area_filtered.append(hull)
-shapes = shapes_area_filtered
+contours_area_filtered = []
+for contour in contours:
+    if cv2.contourArea(contour) >= AREA_THRESH:
+        #print(cv2.contourArea(contour))
+        contours_area_filtered.append(contour)
+contours = contours_area_filtered
 
 img_copy2 = img.copy()
-cv2.drawContours(img_copy2, shapes, -1, (0, 255, 0), 2, cv2.LINE_AA)
-cv2.imshow("shapes", img_copy2)
-print(f"shapes: {len(shapes)}")
+cv2.drawContours(img_copy2, contours, -1, (0, 255, 0), 2, cv2.LINE_AA)
+cv2.imshow("contours", img_copy2)
+
+# Find number of shapes
+print(f"number of shapes: {len(contours)}")
+
+# Find shape of shapes
+features = []
+for contour in contours:
+    m = cv2.moments(contour)
+    features.append([
+        m["nu20"],
+        m["nu11"],
+        m["nu02"],
+        m["nu30"],
+        m["nu21"],
+        m["nu12"],
+        m["nu03"]
+    ])
+#print(features)
+combined_distance = np.array([0.0,0.0,0.0])
+for feature in features:
+    feature = np.array(feature)
+    ellipse_dist = np.linalg.norm(feature - ELLIPSE_FEATURES)
+    diamond_dist = np.linalg.norm(feature - DIAMOND_FEATURES)
+    squiggle_dist = np.linalg.norm(feature - SQUIGGLE_FEATURES)
+    print(f"ellipse: {ellipse_dist}, diamond: {diamond_dist}, squiggle: {squiggle_dist}")
+    combined_distance += np.array([ellipse_dist, diamond_dist, squiggle_dist])
+
+min_dist = np.min(combined_distance)
+min_index = np.where(combined_distance == min_dist)[0][0]
+#print(min_index)
+shape = ["Ellipse", "Diamond", "Squiggle"][min_index]
+print("identity of shape: "+shape)
 
 cv2.waitKey()
