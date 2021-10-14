@@ -11,7 +11,7 @@ GREEN_HUE = 60.0
 PURPLE_HUE = 125.0
 
 img = cv2.imread("cards/card2.png")
-img = cv2.GaussianBlur(img, (3,3), cv2.BORDER_DEFAULT)
+#img = cv2.GaussianBlur(img, (3,3), cv2.BORDER_DEFAULT)
 cv2.imshow("card", img)
 
 img_hsv = cv2.cvtColor(img, cv2.COLOR_BGR2HSV)
