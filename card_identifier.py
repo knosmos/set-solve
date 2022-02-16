@@ -7,11 +7,6 @@ WHITE_MIN = np.array([0, 0, 170],np.uint8)
 WHITE_MAX = np.array([180, 60, 255],np.uint8)
 AREA_THRESH = 7000
 
-# Hue Constants
-RED_BASELINE = np.array([3.78503033, 231.60703686, 238.26081195])
-GREEN_BASELINE = np.array([64.06200729, 208.16278386, 130.39869396])
-PURPLE_BASELINE = np.array([126.05860882, 168.53736127, 53.76541635])
-
 # Reference Features
 ELLIPSE_FEATURES = np.array([0.03155387787592858, -0.0037758243610366725, 0.205290481844915, -1.4503161754586032e-05, -2.9263679436010096e-05, 0.000142860777666745, 0.0001081177739358252])
 DIAMOND_FEATURES = np.array([0.032902776926284946, -0.004827861419942702, 0.21169459653794936, -3.226527335538325e-05, 2.965936208089489e-06, 0.0001491130652801827, -6.661682099746633e-05])
@@ -23,7 +18,6 @@ EMPTY_SAT = 0.0
 
 def identify(img):
     # Shape Separation
-    # img = cv2.imread(f"cards/card{sys.argv[1]}.png")
     img = cv2.GaussianBlur(img, (3,3), cv2.BORDER_DEFAULT)
 
     img_gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
@@ -31,17 +25,12 @@ def identify(img):
 
     # Get contours
     contours, hierarchy = cv2.findContours(img_thresh, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
-
     img_copy1 = img.copy()
-    #cv2.drawContours(img_copy1, contours, -1, (0, 255, 0), 2, cv2.LINE_AA)
-    #cv2.imshow("contours", img_copy1)
 
     # Remove contours that are inside others
     contours_filtered = []
     for i, contour in enumerate(contours):
-        #print(f"hierarchy: {hierarchy[0,i,3]}")
         if hierarchy[0,i,3] == -1:
-            #print(cv2.contourArea(contour))
             contours_filtered.append(contour)
     contours = contours_filtered
 
@@ -49,17 +38,14 @@ def identify(img):
     contours_area_filtered = []
     for contour in contours:
         if cv2.contourArea(contour) >= AREA_THRESH:
-            #print(cv2.contourArea(contour))
             contours_area_filtered.append(contour)
     contours = contours_area_filtered
 
     img_copy2 = img.copy()
     cv2.drawContours(img_copy2, contours, -1, (0, 255, 0), 2, cv2.LINE_AA)
-    #cv2.imshow("contours", img_copy2)
 
     # Find number of shapes
     num_shapes = len(contours)
-    # print(f"Number: {num_shapes}")
 
     # Find shape of shapes
     features = []
@@ -74,30 +60,24 @@ def identify(img):
             m["nu12"],
             m["nu03"]
         ])
-    #print(features)
     combined_distance = np.array([0.0,0.0,0.0])
     for feature in features:
         feature = np.array(feature)
         ellipse_dist = np.linalg.norm(feature - ELLIPSE_FEATURES)
         diamond_dist = np.linalg.norm(feature - DIAMOND_FEATURES)
         squiggle_dist = np.linalg.norm(feature - SQUIGGLE_FEATURES)
-        #print(f"ellipse: {ellipse_dist}, diamond: {diamond_dist}, squiggle: {squiggle_dist}")
         combined_distance += np.array([ellipse_dist, diamond_dist, squiggle_dist])
 
     min_dist = np.min(combined_distance)
     min_index = np.where(combined_distance == min_dist)[0][0]
     shape = ["Ellipse", "Diamond", "Squiggle"][min_index]
-    # print("Shape:",shape)
 
     # Find Shading
     img_hsv = cv2.cvtColor(img, cv2.COLOR_BGR2HSV)
     mask = np.zeros_like(img)
     cv2.drawContours(mask, contours, -1, (255, 255, 255), -1)
     mask = cv2.inRange(mask, (250,250,250), (255,255,255))
-    #cv2.imshow("shading_mask", mask)
     mean_shade = cv2.mean(img_hsv, mask=mask)[1]
-    # print(cv2.mean(img_hsv, mask=mask))
-    # print("average saturation:",mean_shade)
 
     filled_dist = abs(mean_shade-FILLED_SAT)
     stripe_dist = abs(mean_shade-STRIPE_SAT)
@@ -107,7 +87,6 @@ def identify(img):
     min_index = diffs.index(min_diff)
 
     best_shading = ["filled", "striped", "empty"][min_index]
-    # print("Shading:", best_shading)
 
     # Find Color
     img_hsv = cv2.cvtColor(img, cv2.COLOR_BGR2HSV)
@@ -116,21 +95,6 @@ def identify(img):
     cv2.imshow("thresh", img_thresh)
 
     mean_color = np.array(cv2.mean(img_hsv, mask=img_thresh)[:-1])
-    '''
-    print(mean_color)
-    diffs = [
-        np.linalg.norm(mean_color - RED_BASELINE),
-        np.linalg.norm(mean_color - GREEN_BASELINE),
-        np.linalg.norm(mean_color - PURPLE_BASELINE)
-    ]
-    print(diffs)
-    min_diff = min(diffs)
-    min_index = diffs.index(min_diff)
-    best_color = ["red", "green", "purple"][min_index]
-
-    #print("Average Hue:",mean_hue)
-    print("Color:", best_color)
-    '''
     # Red
     if mean_color[2] > mean_color[1] and mean_color[2] > mean_color[0]:
         best_color = "red"
@@ -138,7 +102,6 @@ def identify(img):
     elif mean_color[1] > mean_color[0] and mean_color[1] > mean_color[2]:
         best_color = "green"
     # Purple
-    # elif mean_color[0] > mean_color[1] and mean_color[2] > mean_color[1]:
     else:
         best_color = "purple"
 

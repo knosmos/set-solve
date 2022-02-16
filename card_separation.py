@@ -13,13 +13,11 @@ def card_segment(img):
     # Extract white cards    
     img_hsv = cv2.cvtColor(img, cv2.COLOR_BGR2HSV)
     img_thresh = cv2.inRange(img_hsv, WHITE_MIN, WHITE_MAX)
-    # cv2.imshow("image_thresh", img_thresh)
 
     # Find Contours
     contours, hierarchy = cv2.findContours(img_thresh, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
     img_copy1 = img.copy()
     cv2.drawContours(img_copy1, contours, -1, (0, 255, 0), 2, cv2.LINE_AA)
-    # cv2.imshow("contours", img_copy1)
 
     # Find Cards
     card_contours = []
@@ -44,7 +42,6 @@ def card_segment(img):
 
     img_copy2 = img.copy()
     cv2.drawContours(img_copy2, card_contours, -1, (0, 255, 0), 2, cv2.LINE_AA)
-    # cv2.imshow("cards", img_copy2)
 
     # Perspective-skew each card
     vertices = np.float32([[0,CARD_IMG_HEIGHT], [0,0], [CARD_IMG_WIDTH,0], [CARD_IMG_WIDTH,CARD_IMG_HEIGHT]])
