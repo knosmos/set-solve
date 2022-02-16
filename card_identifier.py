@@ -12,9 +12,12 @@ ELLIPSE_FEATURES = np.array([0.03155387787592858, -0.0037758243610366725, 0.2052
 DIAMOND_FEATURES = np.array([0.032902776926284946, -0.004827861419942702, 0.21169459653794936, -3.226527335538325e-05, 2.965936208089489e-06, 0.0001491130652801827, -6.661682099746633e-05])
 SQUIGGLE_FEATURES = np.array([0.030580390546484034, 0.019392749469723414, 0.2646959376958161, 6.466367502274759e-05, 0.0005285519078694084, -0.0022415312093423457, -0.007887757425908665])
 
-FILLED_SAT = 110.0
-STRIPE_SAT = 55.0
-EMPTY_SAT = 0.0
+# Shading Constants
+SOBEL_THRESH = 0.01
+FILL_THRESH = 0.2
+
+# Color Constants
+COLOR_THRESH = 10
 
 def identify(img):
     # Shape Separation
@@ -73,44 +76,49 @@ def identify(img):
     shape = ["Ellipse", "Diamond", "Squiggle"][min_index]
 
     # Find Shading
-    img_hsv = cv2.cvtColor(img, cv2.COLOR_BGR2HSV)
-    mask = np.zeros_like(img)
-    cv2.drawContours(mask, contours, -1, (255, 255, 255), -1)
-    mask = cv2.inRange(mask, (250,250,250), (255,255,255))
-    mean_shade = cv2.mean(img_hsv, mask=mask)[1]
+    # Use SobelY to find stripes
+    img_sobel = cv2.Sobel(img_thresh, cv2.CV_64F, 0, 1, ksize=1)
 
-    filled_dist = abs(mean_shade-FILLED_SAT)
-    stripe_dist = abs(mean_shade-STRIPE_SAT)
-    empty_dist = abs(mean_shade-EMPTY_SAT)
-    diffs = [filled_dist, stripe_dist, empty_dist]
-    min_diff = min(diffs)
-    min_index = diffs.index(min_diff)
+    sobel_white = np.sum(img_sobel == 255)/img_sobel.size
+    thresh_white = np.sum(img_thresh == 255)/img_thresh.size
 
-    best_shading = ["filled", "striped", "empty"][min_index]
+    # If there are a lot of white on the Sobel image, it's probably striped
+    if sobel_white > SOBEL_THRESH:
+        shading = "striped"
+
+    # If there is a lot of white on the thresh image, but not a lot
+    # of white on the Sobel image, it's probably solid
+    elif thresh_white > FILL_THRESH:
+        shading = "solid"
+
+    # If there is not much white on either image, it's probably empty
+    else:
+        shading = "empty"
 
     # Find Color
     img_hsv = cv2.cvtColor(img, cv2.COLOR_BGR2HSV)
     img_thresh = cv2.inRange(img_hsv, WHITE_MIN, WHITE_MAX)
     img_thresh = cv2.bitwise_not(img_thresh)
-    cv2.imshow("thresh", img_thresh)
 
-    mean_color = np.array(cv2.mean(img_hsv, mask=img_thresh)[:-1])
+    mean_color = np.array(cv2.mean(img, mask=img_thresh)[:-1])
+    print(mean_color)
     # Red
-    if mean_color[2] > mean_color[1] and mean_color[2] > mean_color[0]:
+    if mean_color[2] > mean_color[1]+COLOR_THRESH and mean_color[2] > mean_color[0]+COLOR_THRESH:
         best_color = "red"
-    # Green
-    elif mean_color[1] > mean_color[0] and mean_color[1] > mean_color[2]:
-        best_color = "green"
     # Purple
-    else:
+    elif mean_color[2] > mean_color[1]+COLOR_THRESH and mean_color[0] > mean_color[1]+COLOR_THRESH:
         best_color = "purple"
+    # Green
+    elif mean_color[1] > mean_color[0]+COLOR_THRESH and mean_color[1] > mean_color[2]+COLOR_THRESH:
+        best_color = "green"
+    
 
     return {
         "num"    : num_shapes,
         "shape"  : shape,
-        "shading": best_shading,
+        "shading": shading,
         "color"  : best_color,
     }
 
 if __name__ == "__main__":
-    print(identify(cv2.imread("cards/card2.png")))
+    print(identify(cv2.imread("cards/card5.png")))
