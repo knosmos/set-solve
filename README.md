@@ -29,3 +29,6 @@ whether the card is a squiggle, diamond or ellipse.
 This is done by finding how much of the card is colored. A solid-shaded card will have
 more colored pixels than a striped or empty-shaded card. We also run a Sobel edge-detection
 algorithm; a large number of edge pixels indicates that the card is striped.
+
+### SET Determination
+This is the easiest part - just a complete search on all possible SETs.
