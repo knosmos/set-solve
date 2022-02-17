@@ -17,7 +17,12 @@ SOBEL_THRESH = 0.01
 FILL_THRESH = 0.2
 
 # Color Constants
-COLOR_THRESH = 10
+COLOR_THRESH = 0
+PURPLE_THRESH = 60
+
+RED_BASELINE = np.array([45, 28, 234])
+GREEN_BASELINE = np.array([80, 167, 20])
+PURPLE_BASELINE = np.array([145, 45, 102])
 
 def identify(img):
     # Shape Separation
@@ -83,12 +88,12 @@ def identify(img):
     thresh_white = np.sum(img_thresh == 255)/img_thresh.size
 
     # If there are a lot of white on the Sobel image, it's probably striped
-    if sobel_white > SOBEL_THRESH:
+    if sobel_white > SOBEL_THRESH/(4-num_shapes):
         shading = "striped"
 
     # If there is a lot of white on the thresh image, but not a lot
     # of white on the Sobel image, it's probably solid
-    elif thresh_white > FILL_THRESH:
+    elif thresh_white > FILL_THRESH/(4-num_shapes):
         shading = "solid"
 
     # If there is not much white on either image, it's probably empty
@@ -102,16 +107,26 @@ def identify(img):
 
     mean_color = np.array(cv2.mean(img, mask=img_thresh)[:-1])
     print(mean_color)
+    '''
     # Red
     if mean_color[2] > mean_color[1]+COLOR_THRESH and mean_color[2] > mean_color[0]+COLOR_THRESH:
         best_color = "red"
     # Purple
-    elif mean_color[2] > mean_color[1]+COLOR_THRESH and mean_color[0] > mean_color[1]+COLOR_THRESH:
+    elif mean_color[2] > mean_color[1]+COLOR_THRESH and mean_color[0]-mean_color[2] < PURPLE_THRESH:
         best_color = "purple"
     # Green
     elif mean_color[1] > mean_color[0]+COLOR_THRESH and mean_color[1] > mean_color[2]+COLOR_THRESH:
         best_color = "green"
-    
+    '''
+    diffs = [
+        np.linalg.norm(mean_color - RED_BASELINE),
+        np.linalg.norm(mean_color - GREEN_BASELINE),
+        np.linalg.norm(mean_color - PURPLE_BASELINE)
+    ]
+    #print(diffs)
+    min_diff = min(diffs)
+    min_index = diffs.index(min_diff)
+    best_color = ["red", "green", "purple"][min_index]
 
     return {
         "num"    : num_shapes,

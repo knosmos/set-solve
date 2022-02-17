@@ -18,6 +18,7 @@ def card_segment(img):
     contours, hierarchy = cv2.findContours(img_thresh, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
     img_copy1 = img.copy()
     cv2.drawContours(img_copy1, contours, -1, (0, 255, 0), 2, cv2.LINE_AA)
+    cv2.imshow("image", img_copy1)
 
     # Find Cards
     card_contours = []
@@ -70,8 +71,9 @@ def card_segment(img):
 
 if __name__ == "__main__":
     # Read image
-    img = cv2.imread("test/set5.jpg")
+    img = cv2.imread("test/set8.png")
     # Output
     cards = card_segment(img)
     for i in range(len(cards)):
         cv2.imwrite(f"cards/card{i}.png", cards[i])
+    cv2.waitKey()

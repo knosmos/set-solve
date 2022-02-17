@@ -14,6 +14,6 @@ def extract(img):
 def solve(cards):
     return solver.solve(cards)
 
-cards = extract(cv2.imread("test/set6.jpg"))
+cards = extract(cv2.imread("test/set5.jpg"))
 print(cards)
 print(solve(cards))

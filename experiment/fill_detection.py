@@ -4,7 +4,7 @@ import numpy as np
 SOBEL_THRESH = 0.01
 FILL_THRESH = 0.2
 
-img = cv2.imread("cards/card10.png")
+img = cv2.imread("cards/card0.png")
 #img = cv2.GaussianBlur(img, (5,5), cv2.BORDER_DEFAULT)
 
 img_gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)

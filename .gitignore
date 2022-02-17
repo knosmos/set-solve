@@ -1,3 +1,6 @@
 # Ignore input/output image files
 cards/*
 test/*
+
+# Ignore pycache
+__pycache__/*
