@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <link rel="stylesheet" href="static/style.css">
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <script src="https://cdn.jsdelivr.net/npm/vue@2.6.14"></script>
+        <title>set-solve</title>
+    </head>
+    <div class=container id="root">
+        <h1>set-solve</h1>
+        <h2>click on cards to correct scanning errors</h2>
+        <div id="button-container">
+            <button v-on:click="prevSolution">prev</button>
+            <button v-on:click="nextSolution">next</button>
+        </div>
+        <div class="card-grid">
+            <div class="card" v-bind:class="{'selected': card.selected}" v-for="card in cards">
+                <img v-bind:src="'static/cards/'+card.shape+card.color+card.shading+'.png'" v-for="i in card.num">
+            </div>
+        </div>
+    </div>
+    <script>
+        let cards = {{cards|tojson}};
+        for (let card of cards) {
+            card.shape = card.shape.charAt(0).toLowerCase();
+            card.color = card.color.charAt(0).toLowerCase();
+            card.shading = card.shading.charAt(0).toLowerCase();
+            card.selected = false;
+        }
+        
+        function testSet(i,j,k) {
+            for (let item of Object.keys(cards[i])) {
+                set = new Set();
+                set.add(cards[i][item]);
+                set.add(cards[j][item]);
+                set.add(cards[k][item]);
+                if (set.size == 2) return false;
+            }
+            return true;
+        }
+
+        function getSolutions() {
+            let solutions = [];
+            for (let i = 0; i < cards.length; i++) {
+                for (let j = 0; j < i; j++) {
+                    for (let k = 0; k < j; k++) {
+                        if (testSet(i,j,k)) solutions.push([k,j,i]);
+                    }
+                }
+            }
+            return solutions;
+        }
+        
+        function displaySolution(num) {
+            for (let card of cards) {
+                card.selected = false;
+            }
+            for (let x of solutions[num]) {
+                cards[x].selected = true;
+            }
+            return cards;
+        }
+        
+        solutions = getSolutions();
+        displaySolution(0);
+        let currSolution = 0;
+        let app = new Vue({
+            el: '#root',
+            data: {
+                cards: cards
+            },
+            methods: {
+                prevSolution: function() {
+                    currSolution -= 1;
+                    currSolution = Math.max(0, Math.min(currSolution, solutions.length-1));
+                    displaySolution(currSolution);
+                },
+                nextSolution: function() {
+                    currSolution += 1;
+                    currSolution = Math.max(0, Math.min(currSolution, solutions.length-1));
+                    displaySolution(currSolution);
+                }
+            }
+        });
+    </script>
+</html>

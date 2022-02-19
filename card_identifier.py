@@ -8,7 +8,7 @@ WHITE_MAX = np.array([180, 60, 255],np.uint8)
 AREA_THRESH = 7000
 
 # Reference Features
-ELLIPSE_FEATURES = np.array([0.03155387787592858, -0.0037758243610366725, 0.205290481844915, -1.4503161754586032e-05, -2.9263679436010096e-05, 0.000142860777666745, 0.0001081177739358252])
+OVAL_FEATURES = np.array([0.03155387787592858, -0.0037758243610366725, 0.205290481844915, -1.4503161754586032e-05, -2.9263679436010096e-05, 0.000142860777666745, 0.0001081177739358252])
 DIAMOND_FEATURES = np.array([0.032902776926284946, -0.004827861419942702, 0.21169459653794936, -3.226527335538325e-05, 2.965936208089489e-06, 0.0001491130652801827, -6.661682099746633e-05])
 SQUIGGLE_FEATURES = np.array([0.030580390546484034, 0.019392749469723414, 0.2646959376958161, 6.466367502274759e-05, 0.0005285519078694084, -0.0022415312093423457, -0.007887757425908665])
 
@@ -17,8 +17,8 @@ SOBEL_THRESH = 0.01
 FILL_THRESH = 0.2
 
 # Color Constants
-COLOR_THRESH = 0
-PURPLE_THRESH = 60
+COLOR_THRESH = 10
+PURPLE_THRESH = 30
 
 RED_BASELINE = np.array([45, 28, 234])
 GREEN_BASELINE = np.array([80, 167, 20])
@@ -54,6 +54,9 @@ def identify(img):
 
     # Find number of shapes
     num_shapes = len(contours)
+    if num_shapes > 3:
+        print("scanning error - too many shapes; defaulting to 3")
+        num_shapes = 3
 
     # Find shape of shapes
     features = []
@@ -71,14 +74,14 @@ def identify(img):
     combined_distance = np.array([0.0,0.0,0.0])
     for feature in features:
         feature = np.array(feature)
-        ellipse_dist = np.linalg.norm(feature - ELLIPSE_FEATURES)
+        oval_dist = np.linalg.norm(feature - OVAL_FEATURES)
         diamond_dist = np.linalg.norm(feature - DIAMOND_FEATURES)
         squiggle_dist = np.linalg.norm(feature - SQUIGGLE_FEATURES)
-        combined_distance += np.array([ellipse_dist, diamond_dist, squiggle_dist])
+        combined_distance += np.array([oval_dist, diamond_dist, squiggle_dist])
 
     min_dist = np.min(combined_distance)
     min_index = np.where(combined_distance == min_dist)[0][0]
-    shape = ["Ellipse", "Diamond", "Squiggle"][min_index]
+    shape = ["oval", "diamond", "squiggle"][min_index]
 
     # Find Shading
     # Use SobelY to find stripes
@@ -94,7 +97,7 @@ def identify(img):
     # If there is a lot of white on the thresh image, but not a lot
     # of white on the Sobel image, it's probably solid
     elif thresh_white > FILL_THRESH/(4-num_shapes):
-        shading = "solid"
+        shading = "filled"
 
     # If there is not much white on either image, it's probably empty
     else:
@@ -106,8 +109,8 @@ def identify(img):
     img_thresh = cv2.bitwise_not(img_thresh)
 
     mean_color = np.array(cv2.mean(img, mask=img_thresh)[:-1])
-    print(mean_color)
-    '''
+    # print(mean_color)
+
     # Red
     if mean_color[2] > mean_color[1]+COLOR_THRESH and mean_color[2] > mean_color[0]+COLOR_THRESH:
         best_color = "red"
@@ -117,17 +120,17 @@ def identify(img):
     # Green
     elif mean_color[1] > mean_color[0]+COLOR_THRESH and mean_color[1] > mean_color[2]+COLOR_THRESH:
         best_color = "green"
-    '''
-    diffs = [
-        np.linalg.norm(mean_color - RED_BASELINE),
-        np.linalg.norm(mean_color - GREEN_BASELINE),
-        np.linalg.norm(mean_color - PURPLE_BASELINE)
-    ]
-    #print(diffs)
-    min_diff = min(diffs)
-    min_index = diffs.index(min_diff)
-    best_color = ["red", "green", "purple"][min_index]
-
+    else:
+        diffs = [
+            np.linalg.norm(mean_color - RED_BASELINE),
+            np.linalg.norm(mean_color - GREEN_BASELINE),
+            np.linalg.norm(mean_color - PURPLE_BASELINE)
+        ]
+        #print(diffs)
+        min_diff = min(diffs)
+        min_index = diffs.index(min_diff)
+        best_color = ["red", "green", "purple"][min_index]
+    
     return {
         "num"    : num_shapes,
         "shape"  : shape,
