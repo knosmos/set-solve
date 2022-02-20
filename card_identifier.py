@@ -15,8 +15,7 @@ SQUIGGLE_FEATURES = np.array([0.030580390546484034, 0.019392749469723414, 0.2646
 # Shading Constants
 SOBEL_THRESH = 0.01
 FILL_THRESH = 0.2
-SAT_THRESH = 5
-VAL_THRESH = 10
+SHADED_COLOR_THRESH = 50
 
 # Color Constants
 COLOR_THRESH = 10
@@ -104,30 +103,26 @@ def identify(img):
     # If there is not much white on either image, it's probably empty
     else:
         shading = "empty"
-        # Find Shading by comparing saturation and lightness
-        # This makes sure that the card isn't actually striped and the image quality is too bad
+        # Find Shading by comparing color distance to white card
+        # This makes sure that the card isn't actually striped and the image quality is just too bad
         
         img_hsv = cv2.cvtColor(img, cv2.COLOR_BGR2HSV)
         mask_shapes = np.zeros(img.shape[:2], np.uint8)
         cv2.drawContours(mask_shapes, contours, -1, 255, -1)
-        cv2.imshow("mask_shapes", mask_shapes)
 
-        # Get median color of white card
+        # Get mean color of white card
         mask_card = cv2.bitwise_not(mask_shapes)
         mask_card = cv2.erode(mask_card, np.ones((3,3), np.uint8), iterations=1)
-        cv2.imshow("mask_card", mask_card)
-        cv2.waitKey()
-        masked = cv2.bitwise_and(img_hsv, img_hsv, mask=mask_card)
-        sat_card = np.average(masked[:,:,1])
-        val_card = np.average(masked[:,:,2])
-        print("card median:", sat_card, val_card)
+        mean_card = cv2.mean(img_hsv, mask=mask_card)
+        print("card mean:", mean_card)
 
         # Get mean color of shape
-        masked = cv2.bitwise_and(img_hsv, img_hsv, mask=mask_shapes)
-        sat_shape = np.average(masked[:,:,1])
-        val_shape = np.average(masked[:,:,2])
-        print("shape median:", sat_shape, val_shape)
-        if sat_shape-sat_card > SAT_THRESH and val_card-val_shape > VAL_THRESH:
+        mean_shape = cv2.mean(img_hsv, mask=mask_shapes)
+        print("shape mean:", mean_shape)
+        
+        distance = np.linalg.norm(np.array(mean_shape) - np.array(mean_card))
+        print(distance)
+        if distance > SHADED_COLOR_THRESH:
             shading = "striped"
             
     # Find Color
@@ -166,4 +161,4 @@ def identify(img):
     }
 
 if __name__ == "__main__":
-    print(identify(cv2.imread("cards/card1.png")))
+    print(identify(cv2.imread("cards/card7.png")))
