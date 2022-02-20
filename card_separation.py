@@ -71,7 +71,7 @@ def card_segment(img):
 
 if __name__ == "__main__":
     # Read image
-    img = cv2.imread("test/set8.png")
+    img = cv2.imread("test/set.jpg")
     # Output
     cards = card_segment(img)
     for i in range(len(cards)):
