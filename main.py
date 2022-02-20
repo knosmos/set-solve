@@ -2,7 +2,7 @@ import card_separation
 import card_identifier
 import solver
 import cv2
-from rich import print
+# from rich import print
 from flask import Flask, render_template, request
 
 def extract(img):
