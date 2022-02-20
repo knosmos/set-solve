@@ -84,6 +84,7 @@
         }
         
         let currEditingCard = {"editing":false};
+        let currentlyEditing = false;
 
         solutions = getSolutions();
         displaySolution(0);
@@ -126,10 +127,20 @@
                     displaySolution(currSolution);
                 },
                 editCard: function(event, card) {
-                    currEditingCard.editing = false;
-                    if (currEditingCard.index != card.index) {
+                    if (currentlyEditing) {
+                        currEditingCard.editing = false;
+                        if (currEditingCard.index != card.index) {
+                            currEditingCard = card;
+                            currEditingCard.editing = true;
+                        }
+                        else {
+                            currentlyEditing = false;
+                        }
+                    }
+                    else {
                         currEditingCard = card;
                         currEditingCard.editing = true;
+                        currentlyEditing = true;
                     }
                 },
                 updateCard: function(e, trait) {
