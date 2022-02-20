@@ -15,18 +15,37 @@
             <button v-on:click="nextSolution">next</button>
         </div>
         <div class="card-grid">
-            <div class="card" v-bind:class="{'selected': card.selected}" v-for="card in cards">
-                <img v-bind:src="'static/cards/'+card.shape+card.color+card.shading+'.png'" v-for="i in card.num">
+            <div
+                class="card"
+                v-bind:class="{'selected': card.selected, 'editing': card.editing}"
+                v-for="card in cards"
+                v-on:click="editCard($event, card)">
+                <img 
+                    v-bind:src="'static/cards/'+card.shape+card.color+card.shading+'.png'"
+                    v-for="i in card.num"
+                >
+            </div>
+        </div>
+        <div class="card-editor">
+            <div class="card-trait-editor" v-for="trait in traits">
+                <p>{{ '{{ trait.name }}' }}</p>
+                <select v-on:change="updateCard($event, trait.name)">
+                    <option value=none selected>Select</option>
+                    <option v-for="val in trait.vals" v-bind:value="{val:val}">{{ '{{ val }}' }}</option>
+                </select>
             </div>
         </div>
     </div>
     <script>
         let cards = {{cards|tojson}};
-        for (let card of cards) {
+        for (let i=0; i<cards.length; i++) {
+            card = cards[i];
             card.shape = card.shape.charAt(0).toLowerCase();
             card.color = card.color.charAt(0).toLowerCase();
             card.shading = card.shading.charAt(0).toLowerCase();
+            card.index = i;
             card.selected = false;
+            card.editing = false;
         }
         
         function testSet(i,j,k) {
@@ -56,19 +75,44 @@
             for (let card of cards) {
                 card.selected = false;
             }
-            for (let x of solutions[num]) {
-                cards[x].selected = true;
+            if (solutions.length != 0) {
+                for (let x of solutions[num]) {
+                    cards[x].selected = true;
+                }
+                return cards;
             }
-            return cards;
         }
         
+        let currEditingCard = {"editing":false};
+
         solutions = getSolutions();
         displaySolution(0);
+
+        let traits = [
+            {
+                name: "num",
+                vals: [1,2,3]
+            },
+            {
+                name: "color",
+                vals: ["red","green","purple"]
+            },
+            {
+                name: "shape",
+                vals: ["oval","squiggle","diamond"]
+            },
+            {
+                name: "shading",
+                vals: ["filled","striped","empty"]
+            }
+        ];
+
         let currSolution = 0;
         let app = new Vue({
             el: '#root',
             data: {
-                cards: cards
+                cards: cards,
+                traits: traits
             },
             methods: {
                 prevSolution: function() {
@@ -80,6 +124,22 @@
                     currSolution += 1;
                     currSolution = Math.max(0, Math.min(currSolution, solutions.length-1));
                     displaySolution(currSolution);
+                },
+                editCard: function(event, card) {
+                    currEditingCard.editing = false;
+                    if (currEditingCard.index != card.index) {
+                        currEditingCard = card;
+                        currEditingCard.editing = true;
+                    }
+                },
+                updateCard: function(e, trait) {
+                    let selection = e.target.options[e.target.options.selectedIndex].text.charAt(0);
+                    if (trait == "num") {
+                        selection = parseInt(selection);    
+                    }
+                    currEditingCard[trait] = selection;
+                    solutions = getSolutions();
+                    displaySolution(0);
                 }
             }
         });

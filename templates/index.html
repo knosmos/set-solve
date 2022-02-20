@@ -11,7 +11,10 @@
     <div class="container">
         <h1>set-solve</h1>
         <form method=post enctype=multipart/form-data>
-            <input type="file" name="file" id="file">
+            <label class="file-select">
+                <input type="file" name="file" required/>
+                <span>Select File</span>
+            </label>
             <input type="submit" value="Upload" id="submit">
         </form>
     </div>

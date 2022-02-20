@@ -3,8 +3,8 @@ import numpy as np
 import sys
 
 # Shape Separation Constants
-WHITE_MIN = np.array([0, 0, 170],np.uint8)
-WHITE_MAX = np.array([180, 60, 255],np.uint8)
+WHITE_MIN = np.array([0, 0, 100],np.uint8)
+WHITE_MAX = np.array([180, 100, 255],np.uint8)
 AREA_THRESH = 7000
 
 # Reference Features
@@ -15,15 +15,15 @@ SQUIGGLE_FEATURES = np.array([0.030580390546484034, 0.019392749469723414, 0.2646
 # Shading Constants
 SOBEL_THRESH = 0.01
 FILL_THRESH = 0.2
-SHADED_COLOR_THRESH = 50
+SHADED_COLOR_THRESH = 42
 
 # Color Constants
 COLOR_THRESH = 10
 PURPLE_THRESH = 30
 
-RED_BASELINE = np.array([45, 28, 234])
-GREEN_BASELINE = np.array([80, 167, 20])
-PURPLE_BASELINE = np.array([145, 45, 102])
+RED_BASELINE = np.array([20, 39, 201])
+GREEN_BASELINE = np.array([67, 119, 12])
+PURPLE_BASELINE = np.array([46, 20, 56])
 
 def identify(img):
     # Shape Separation
@@ -129,10 +129,27 @@ def identify(img):
     img_hsv = cv2.cvtColor(img, cv2.COLOR_BGR2HSV)
     img_thresh_card = cv2.inRange(img_hsv, WHITE_MIN, WHITE_MAX)
     img_thresh_color = cv2.bitwise_not(img_thresh_card)
-
+    #cv2.imshow("thresh_color",img_thresh_color)
+    #cv2.waitKey()
     mean_color = np.array(cv2.mean(img, mask=img_thresh_color)[:-1])
-    # print(mean_color)
+    print("mean color:", mean_color)
+    '''
+    mean_card = np.mean(cv2.mean(img, mask=img_thresh_card)[:-1])
+    adj = np.array([255,255,255]) - np.array([mean_card, mean_card, mean_card])
+    print("adjustment:", adj)
+    mean_color = np.array(cv2.mean(img, mask=img_thresh_color)[:-1]) + adj/2
+    print("adjusted mean color:",mean_color)
 
+
+    
+    # Boost saturation
+    arr = np.uint8([[mean_color]])
+    mean_color_hsv = cv2.cvtColor(arr, cv2.COLOR_RGB2HSV)[0][0]
+    mean_color_hsv[1] = 255
+    arr = np.uint8([[mean_color_hsv]])
+    mean_color = cv2.cvtColor(arr, cv2.COLOR_HSV2RGB)[0][0]
+    print(mean_color)
+    
     # Red
     if mean_color[2] > mean_color[1]+COLOR_THRESH and mean_color[2] > mean_color[0]+COLOR_THRESH:
         best_color = "red"
@@ -143,15 +160,16 @@ def identify(img):
     elif mean_color[1] > mean_color[0]+COLOR_THRESH and mean_color[1] > mean_color[2]+COLOR_THRESH:
         best_color = "green"
     else:
-        diffs = [
-            np.linalg.norm(mean_color - RED_BASELINE),
-            np.linalg.norm(mean_color - GREEN_BASELINE),
-            np.linalg.norm(mean_color - PURPLE_BASELINE)
-        ]
-        #print(diffs)
-        min_diff = min(diffs)
-        min_index = diffs.index(min_diff)
-        best_color = ["red", "green", "purple"][min_index]
+    '''
+    diffs = [
+        np.linalg.norm(mean_color - RED_BASELINE),
+        np.linalg.norm(mean_color - GREEN_BASELINE),
+        np.linalg.norm(mean_color - PURPLE_BASELINE)
+    ]
+    #print(diffs)
+    min_diff = min(diffs)
+    min_index = diffs.index(min_diff)
+    best_color = ["red", "green", "purple"][min_index]
 
     return {
         "num"    : num_shapes,

@@ -159,32 +159,4 @@ input[type=file] {
 .card-editor {
     display: grid;
     grid-template-columns: 1fr 1fr 1fr 1fr;
-    gap: 10px;
-    padding-top: 10px;
-}
-
-.card-editor div {
-    border: 3px solid rgb(230, 170, 7);
-    border-radius: 5px;
-    padding: 5px;
-    box-sizing: border-box;
-}
-
-.card-editor p {
-    font-size: 12pt;
-    margin: 0px;
-}
-
-.card-editor select {
-    font-size: 12pt;
-    margin-top: 3px;
-    padding: 3px;
-    width: 100%;
-    font-family: HurmeGeo2, sans-serif;
-    border-radius: 5px;
-}
-
-.editing {
-    box-shadow: 0px 0px 0px 5px rgb(255, 197, 38);
-    background-color: rgb(250, 247, 223);
 }
