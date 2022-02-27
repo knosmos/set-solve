@@ -1,6 +1,7 @@
 # Playing Set with Computer Vision
 
-Uses OpenCV to find SETs.
+![setsolve](https://user-images.githubusercontent.com/30610197/155866087-8139f7b6-1a5d-4793-b088-161ea118dd58.png)
+Uses OpenCV to play SET, a card game where the goal is to find three cards where each "feature" - number, color, shape, shading - are all the same, or all different.
 
 ## How does it work?
 
